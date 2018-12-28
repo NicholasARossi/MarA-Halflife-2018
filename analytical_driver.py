@@ -202,4 +202,4 @@ if __name__ == "__main__":
     fig5.subplots_adjust(hspace=.5)
     # fig5.subplots_adjust(wspace=.5)
     # plt.gcf().subplots_adjust(right=0.15)
-    fig5.savefig('fig_out/analytical_solutions.pdf', bbox_inches='tight')
+    fig5.savefig('figures/analytical_solutions.pdf', bbox_inches='tight')
