@@ -16,7 +16,7 @@ import matplotlib
 
 
 
-if __name__ == "__main__":
+def main():
     sns.set_style('white')
     folder1 = 'Fig3_SourceData_1'
     names1 = listdir(folder1)
@@ -156,4 +156,80 @@ if __name__ == "__main__":
     ax3[1].set_ylabel('Infromation (bits)')
     ax3[0].set_ylim([0, 0.25])
     plt.tight_layout()
-    f3.savefig('fig_out/modified_marA_TS.png', bbox_inches='tight')
+    f3.savefig('figures/modified_marA_TS.pdf', bbox_inches='tight')
+
+def Simplified_simulation(t_int,t_end,N,tau_x,tau_y,tau_z,gy,gz):
+    dt = float(t_end - t_int) / N
+
+    ### Initialize Matrix for all possible cells at all time points for all dimension of data (lets say we're not going to let it get more than 100)
+    Intrinsic_Noise = np.empty((N, 3))
+    Intrinsic_Noise[:,:]= np.NAN
+
+    Gene = np.empty((N, 3))
+    Gene[:,:]= np.NAN
+
+
+    g_y=gy
+    g_z=gz
+
+    lambda_x=(1.0 - np.exp(-dt / tau_x))
+
+    ### initializing values
+
+    cellular_indexes = np.array(range(100))
+    # for index in cellular_indexes:
+    Gene[0, 0] = 0
+    Gene[0, 1] = 0
+    Gene[0, 2] = 0
+
+    for t in np.arange(N-1)+1:
+
+
+        Gene[t,0] = Gene[t - 1,0] + dt * (-Gene[t - 1,0]/tau_x)+np.sqrt(2/tau_x)*np.random.normal(scale=np.sqrt(dt),loc=0.0)
+        Gene[t,1] = Gene[t - 1,1] + dt * (g_y*Gene[t - 1,0]-Gene[t - 1,1]/tau_y)+np.sqrt(2/tau_y)*np.random.normal(loc=0.0,scale=np.sqrt(dt))
+        Gene[t, 2] = Gene[t - 1,2] + dt * (g_z*Gene[t - 1,0]-Gene[t - 1,2]/tau_z)+np.sqrt(2/tau_z)*np.random.normal(loc=0.0,scale=np.sqrt(dt))
+
+    return Gene
+
+def traces():
+
+    fig,ax=plt.subplots(1,2, gridspec_kw = {'width_ratios':[3, 1]},figsize=(12,4))
+    t_end = 100000
+    t_int = 0
+    N = 400000
+    dt = float(t_end - t_int) / N
+    time_vect = np.arange(t_int, t_end, dt)
+    gy = 0.1
+    gz = 0.1
+    tau_x = 10
+
+    tau_y = 30.1 / np.log(2)
+
+    tau_z = 30.2 / np.log(2)
+
+
+    colors = cm.rainbow(np.linspace(0, 1, 18))[[1,5,10]]
+    tauxs=[1,5,10]
+    for l in range(3):
+        tau_x = tauxs[l]
+
+        Gene = Simplified_simulation(t_int, t_end, N, tau_x / np.log(2), tau_y, tau_z, gy, gz)
+        ax[0].plot(time_vect, Gene[:, 0], linewidth=3, color=colors[l])
+        ax[0].set_ylim([-5,5])
+        ax[0].set_xlim([0,100])
+
+
+        ax[1].hist(Gene[:, 0],bins=25, normed=1,orientation="horizontal",histtype = 'step',color=colors[l],linewidth=3)
+        ax[1].set_ylim([-5,5])
+    ax[0].set_xlabel('Time (Minutes')
+    ax[0].set_ylabel('Relative Protein Concentration')
+    ax[1].set_ylabel('Relative Protein Concentration')
+    ax[1].set_xlabel('Probablity')
+    plt.xticks([0,.25])
+
+    fig.savefig('figures/modified_marA_simulation_traces.pdf')
+
+
+if __name__ == "__main__":
+    main()
+    traces()

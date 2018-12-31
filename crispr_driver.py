@@ -13,7 +13,8 @@ import pandas as pd
 from scipy.optimize import curve_fit
 import seaborn as sns
 import matplotlib
-
+import Figure1_driver as f1d
+import image_function
 def variance_t(t,tau_x,a):
     return a*(tau_x/2)*(1-np.exp(-t/tau_x)**2)
 def var_rate(t, g, tx, ty,z):
@@ -24,8 +25,7 @@ def var_rate(t, g, tx, ty,z):
     e = np.exp(t * (1 / tx - 1 / ty)) * (tx + ty) * (tx ** 2 + ty ** 2 + tx * ty * (-2 + g ** 2 * ty ** 2))
 
     return z*a * (b - c + d - e)
-
-if __name__ == "__main__":
+def main():
     #white backgrounds
     sns.set_style('white')
     matplotlib.rcdefaults()
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     axnaut[1].scatter(total_y_wt, total_z_wt, color=colors[0], alpha=0.1)
     axnaut[0].scatter(total_y_c, total_z_c, color=colors[1], alpha=0.1)
     fnaut.subplots_adjust(hspace=.5)
-    fnaut.savefig('fig_out/crisp_2dhist.pdf', bbox_inches='tight')
+    fnaut.savefig('figures/crisp_2dhist.pdf', bbox_inches='tight')
 
     ### Histograms
     plt.close('all')
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     axnaut2.set_xlabel('Probability density')
     axnaut2.set_ylabel('Fluorescence (A.U.)')
     fnaut2
-    fnaut2.savefig('fig_out/crisp_hist.pdf', bbox_inches='tight')
+    fnaut2.savefig('figures/crisp_hist.pdf', bbox_inches='tight')
 
 
     ### Time series
@@ -167,7 +167,6 @@ if __name__ == "__main__":
 
             ax[1].errorbar(bins[i] + (200 / (2 * nbins)), np.mean(y2[idx == i + 1]), fmt='o', color=color)
 
-            #           ax.errorbar(bins[i]+(200/(2*nbins)),np.mean(y[idx==i+1]),yerr=np.std(y[idx==i+1]),fmt='o',color=color)
             means.append(np.mean(y[idx == i + 1]))
             errors.append(sp.sem(y[idx == i + 1]))
             means2.append(np.mean(y2[idx == i + 1]))
@@ -194,4 +193,59 @@ if __name__ == "__main__":
 
     plt.tight_layout()
 
-    f.savefig('fig_out/crips_ts.png', bbox_inches='tight')
+    f.savefig('figures/crips_ts.png', bbox_inches='tight')
+
+def aux_traces():
+    fig,ax=plt.subplots(1,2, gridspec_kw = {'width_ratios':[3, 1]},figsize=(12,4))
+    t_end = 100000
+    t_int = 0
+    N = 400000
+    dt = float(t_end - t_int) / N
+    time_vect = np.arange(t_int, t_end, dt)
+    gy = 0.1
+    gz = 0.1
+    tau_x = 10
+
+    tau_y = 30.1 / np.log(2)
+
+    tau_z = 30.2 / np.log(2)
+
+
+    colors = cm.rainbow(np.linspace(0, 1, 18))[[1,5,10]]
+    tauxs=[1,5,10]
+    for l in range(3):
+        tau_x = tauxs[l]
+
+        Gene = f1d.Simplified_simulation(t_int, t_end, N, tau_x / np.log(2), tau_y, tau_z, gy, gz)
+        ax[0].plot(time_vect, Gene[:, 0], linewidth=3, color=colors[l])
+        ax[0].set_ylim([-10,10])
+        ax[0].set_xlim([0,100])
+
+
+        ax[1].hist(Gene[:, 0],bins=25, normed=1,orientation="horizontal",histtype = 'step',color=colors[l],linewidth=3)
+        ax[1].set_ylim([-10,10])
+    ax[0].set_xlabel('Time (Minutes')
+    ax[0].set_ylabel('Relative Protein Concentration')
+    ax[1].set_ylabel('Relative Protein Concentration')
+    ax[1].set_xlabel('Probablity')
+    plt.xticks([0,.25])
+
+    fig.savefig('figures/crispr_simulation_traces.pdf')
+
+
+if __name__ == '__main__':
+
+    ### for making all the experimental results:
+    main()
+
+    ### for making the simulation illustrations
+    aux_traces()
+
+    ### for making the snapshot images
+    pscale = [500, 3000]
+    cscale = [2000,16000]
+    yscale = [700, 16000]
+    rscale = [600, 16000]
+    bases=['raw_data/0_none_redux/xy2/nonet90xy2','raw_data/1_14_extracts/14t90xy5']
+    image_function.create_combined_image(bases,pscale,cscale,yscale,rscale)
+

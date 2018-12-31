@@ -185,5 +185,6 @@ def zip2(*args):
   #E.g. zip2([[1],[2],[3]],[[4],[5],[6]]) = [[1,4],[2,5],[3,6]]
   return [sum(sublist,[]) for sublist in zip(*args)]
 
+
 if __name__ == "__main__":
   print("NPEET: Non-parametric entropy estimation toolbox. See readme.pdf for details on usage.")

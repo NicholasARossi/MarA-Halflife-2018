@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.gridspec as gridspec
+from matplotlib import animation, rc
 
 sns.set_style('white')
 
@@ -203,10 +204,13 @@ def main():
 
     Gene = Simplified_simulation(t_int, t_end, N, tau_x / np.log(2), tau_y, tau_z, gy, gz)
     n_cells = 1000
+    temp_vals = np.zeros((len(time_vect), n_cells))
+
     temp_vals1 = np.zeros((len(time_vect), n_cells))
     temp_vals2 = np.zeros((len(time_vect), n_cells))
     for z in range(n_cells):
         Gene = Simplified_simulation(t_int, t_end, N, tau_x / np.log(2), tau_y, tau_z, gy, gz)
+        temp_vals[:, z] = Gene[:, 0]
         temp_vals1[:, z] = Gene[:, 1]
         temp_vals2[:, z] = Gene[:, 2]
 
@@ -248,8 +252,8 @@ def main():
         cloudax[l].set_ylim([-50, 50])
 
     # fig_static
-    fig_static.savefig('figures/static.png',dpi=300)
-    cloudfig.savefig('figures/clouds.png',dpi=300)
+    fig_static.savefig('figures/static.pdf')
+    cloudfig.savefig('figures/clouds.pdf')
     plt.close('all')
     num_cells = 100
 
@@ -283,8 +287,102 @@ def main():
     ax2.set(adjustable='box-forced', aspect='equal')
     ax1.axis('off')
     ax2.axis('off')
-    fig.savefig('figures/2clouds.png')
+    fig.savefig('figures/2clouds.pdf')
 
+    ### movie 1 plot
+    # figure parameters
+    plt.close('all')
+    fig_animate = plt.figure()
+    gs = gridspec.GridSpec(2, 2,
+                           width_ratios=[1, 1.5],
+                           height_ratios=[1.3, 3]
+                           )
+    gs00 = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[2])
+
+    ax1 = plt.subplot(gs[0])
+
+    ax2 = plt.subplot(gs[1])
+
+    colors = ['teal', 'coral', 'orchid']
+    information=cor2info(corr)
+    ax2.plot(time_vect, information, color=colors[j], linewidth=3, label=labels[j])
+    # fig_animate.suptitle('Propagation of Diversity', fontsize=16,fontweight='bold')
+
+
+    ax3 = plt.subplot(gs00[0])
+    ax4 = plt.subplot(gs00[1])
+    ax5 = plt.subplot(gs[3])
+    ax1.fill_between(time_vect, -np.sqrt(varx(time_vect, tau_x / np.log(2))), np.sqrt(varx(time_vect, tau_x / np.log(2))),
+                     color='lightgrey')
+
+    ax3.fill_between(time_vect, -sigy, sigy, color='lightgrey')
+    ax4.fill_between(time_vect, -sigy, sigy, color='lightgrey')
+    # plt.show()
+    ax1.set_ylim([-8, 8])
+    ax3.set_ylim([-20, 20])
+    ax4.set_ylim([-20, 20])
+
+    ax5.set_xlim([-40, 40])
+    ax5.set_ylim([-40, 40])
+    # ax1.set_title('Input ')
+    # ax3.set_title('Output Gene (Y)')
+    # ax4.set_title('Output Gene (Z)')
+
+    ax1.set_ylabel('Gene x')
+    ax1.set_xlabel('Time (Minutes)')
+
+    ax3.set_ylabel('Gene y')
+    ax3.set_xlabel('Time (Minutes)')
+
+    ax4.set_ylabel('Gene z')
+    ax4.set_xlabel('Time (Minutes)')
+
+    ax2.set_xlabel('Time (Minutes)')
+    ax2.set_ylabel('Mutual Information (Bits)')
+
+    ax5.set_xlabel('Gene y')
+    ax5.set_ylabel('Gene z')
+
+    lines = [ax1.plot([], [], color=colors[0], linewidth=3), ax3.plot([], [], color=colors[1], linewidth=3),
+             ax4.plot([], [], color=colors[2], linewidth=3)]
+    dots = [ax2.plot([], [], color='red', linestyle='none', markersize=10, marker='o'),
+            ax5.plot([], [], color='slategrey', linestyle='none', alpha=0.25, marker='o'),
+            ax3.plot([], [], color=colors[1], linestyle='none', alpha=0.5, marker='o'),
+            ax4.plot([], [], color=colors[2], linestyle='none', alpha=0.5, marker='o')]
+
+
+    # lines=[ax8.plot([],[],color='teal',linewidth=3),ax9.plot([],[],color='coral',linewidth=3)]
+
+    # y1=np.nanmean(mis_mat, 1)
+
+
+    # y2=np.nanmean(mis_mat2, 1)
+    def animate(z):
+        lines[0][0].set_data(time_vect[:z], temp_vals[:z, 2])
+        lines[1][0].set_data(time_vect[:z], temp_vals1[:z, 2])
+
+        lines[2][0].set_data(time_vect[:z], temp_vals2[:z, 2])
+
+        dots[0][0].set_data(time_vect[z], information[z])
+
+        dots[1][0].set_data(temp_vals1[z, :], temp_vals2[z, :])
+        dots[2][0].set_data(time_vect[z], temp_vals1[z, [2, 4, 6, 8, 10, 12]])
+        dots[3][0].set_data(time_vect[z], temp_vals2[z, [2, 4, 6, 8, 10, 12]])
+
+        #     lines[0][0].set_data(t_vect[:z],y1[:z])
+        #     lines[1][0].set_data(t_vect[:z],y2[:z])
+        return dots
+
+
+    # # call the animator. blit=True means only re-draw the parts that have changed.
+    # 400 total frames
+    anim3 = animation.FuncAnimation(fig_animate, animate, frames=400, interval=20, blit=False)
+    plt.tight_layout()
+    dpi = 200
+    
+    writer = animation.writers['ffmpeg'](fps=60)
+    anim3.save('movies/movie1.mp4',writer=writer,dpi=dpi)
+# HTML(anim3.to_html5_video())
 if __name__ == "__main__":
     print("Generating Graphs for Figure 1")
     main()
