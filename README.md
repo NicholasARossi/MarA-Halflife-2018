@@ -1,5 +1,5 @@
 # MarA-Halflife-2018
-The accompanying code and data necessary to reproduce the figures from ("Active degradation of MarA controls coordination of its downstream targets")[https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006634] by Nicholas A. Rossi, Thierry Mora, Aleksandra M. Walczak and Mary J. Dunlop
+The accompanying code and data necessary to reproduce the figures from ["Active degradation of MarA controls coordination of its downstream targets"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006634) by Nicholas A. Rossi, Thierry Mora, Aleksandra M. Walczak and Mary J. Dunlop
 
 
 
